@@ -32,6 +32,212 @@
     --ribbon-mark-offset: 8px;
 
     /* NOTE: Previous ribbon-grid-offset variables removed - grid lines now use translateY(-50%) for proper centering */
+
+    /* Entrance animation timing */
+    --entrance-duration: 0.6s;
+    --entrance-delay-step: 0.08s;
+    --entrance-easing: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==================== ENTRANCE ANIMATIONS ==================== */
+/* GPU-accelerated animations for smooth 60fps performance */
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeSlideLeft {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeSlideRight {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes ribbonReveal {
+    from {
+        opacity: 0;
+        clip-path: inset(100% 0 0 0);
+    }
+    to {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+/* Boot loading screen */
+.boot-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.boot-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.boot-logo {
+    font-size: 3rem;
+    font-weight: 200;
+    letter-spacing: 12px;
+    color: var(--accent-cyan);
+    margin-bottom: 30px;
+    animation: fadeIn 1s ease forwards;
+}
+
+.boot-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-primary);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.boot-status {
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+}
+
+/* Entrance animation classes - apply to elements */
+.entrance-fade-up {
+    opacity: 0;
+    animation: fadeSlideUp var(--entrance-duration) var(--entrance-easing) forwards;
+}
+
+.entrance-fade-down {
+    opacity: 0;
+    animation: fadeSlideDown var(--entrance-duration) var(--entrance-easing) forwards;
+}
+
+.entrance-fade-left {
+    opacity: 0;
+    animation: fadeSlideLeft var(--entrance-duration) var(--entrance-easing) forwards;
+}
+
+.entrance-fade-right {
+    opacity: 0;
+    animation: fadeSlideRight var(--entrance-duration) var(--entrance-easing) forwards;
+}
+
+.entrance-scale {
+    opacity: 0;
+    animation: scaleIn var(--entrance-duration) var(--entrance-easing) forwards;
+}
+
+.entrance-ribbon {
+    opacity: 0;
+    animation: ribbonReveal 0.8s var(--entrance-easing) forwards;
+}
+
+/* Staggered delays for child elements */
+.entrance-delay-1 { animation-delay: calc(var(--entrance-delay-step) * 1); }
+.entrance-delay-2 { animation-delay: calc(var(--entrance-delay-step) * 2); }
+.entrance-delay-3 { animation-delay: calc(var(--entrance-delay-step) * 3); }
+.entrance-delay-4 { animation-delay: calc(var(--entrance-delay-step) * 4); }
+.entrance-delay-5 { animation-delay: calc(var(--entrance-delay-step) * 5); }
+.entrance-delay-6 { animation-delay: calc(var(--entrance-delay-step) * 6); }
+.entrance-delay-7 { animation-delay: calc(var(--entrance-delay-step) * 7); }
+.entrance-delay-8 { animation-delay: calc(var(--entrance-delay-step) * 8); }
+
+/* Auto-stagger children */
+.entrance-stagger > *:nth-child(1) { animation-delay: calc(var(--entrance-delay-step) * 1); }
+.entrance-stagger > *:nth-child(2) { animation-delay: calc(var(--entrance-delay-step) * 2); }
+.entrance-stagger > *:nth-child(3) { animation-delay: calc(var(--entrance-delay-step) * 3); }
+.entrance-stagger > *:nth-child(4) { animation-delay: calc(var(--entrance-delay-step) * 4); }
+.entrance-stagger > *:nth-child(5) { animation-delay: calc(var(--entrance-delay-step) * 5); }
+.entrance-stagger > *:nth-child(6) { animation-delay: calc(var(--entrance-delay-step) * 6); }
+.entrance-stagger > *:nth-child(7) { animation-delay: calc(var(--entrance-delay-step) * 7); }
+.entrance-stagger > *:nth-child(8) { animation-delay: calc(var(--entrance-delay-step) * 8); }
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .entrance-fade-up,
+    .entrance-fade-down,
+    .entrance-fade-left,
+    .entrance-fade-right,
+    .entrance-scale,
+    .entrance-ribbon {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .boot-spinner {
+        animation: none;
+        border-top-color: var(--accent-cyan);
+    }
 }
 
 * {
@@ -259,6 +465,78 @@ body {
 .signal-icon.fair span.active { background: var(--accent-orange); }
 .signal-icon.poor span.active { background: var(--accent-red); }
 
+/* WiFi Icon */
+.wifi-icon {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.wifi-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.wifi-icon svg {
+    display: block;
+}
+
+.wifi-icon .wifi-arc {
+    fill: var(--accent-green);
+    transition: fill 0.2s, opacity 0.2s;
+}
+
+/* WiFi signal strength levels */
+.wifi-icon.strength-0 .wifi-arc { fill: var(--text-dim); opacity: 0.3; }
+
+.wifi-icon.strength-1 .wifi-arc-1 { fill: var(--accent-red); }
+.wifi-icon.strength-1 .wifi-arc-2,
+.wifi-icon.strength-1 .wifi-arc-3 { fill: var(--text-dim); opacity: 0.3; }
+
+.wifi-icon.strength-2 .wifi-arc-1,
+.wifi-icon.strength-2 .wifi-arc-2 { fill: var(--accent-orange); }
+.wifi-icon.strength-2 .wifi-arc-3 { fill: var(--text-dim); opacity: 0.3; }
+
+.wifi-icon.strength-3 .wifi-arc { fill: var(--accent-green); }
+
+/* WiFi disconnected state */
+.wifi-icon.disconnected .wifi-arc {
+    fill: var(--text-dim);
+    opacity: 0.3;
+}
+
+.wifi-icon.disconnected::after {
+    content: '×';
+    position: absolute;
+    color: var(--accent-red);
+    font-size: 10px;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* WiFi AP mode */
+.wifi-icon.ap-mode .wifi-arc {
+    fill: var(--accent-cyan);
+}
+
+/* WiFi scanning animation */
+.wifi-icon.scanning .wifi-arc {
+    animation: wifi-scan 1s ease-in-out infinite;
+}
+
+.wifi-icon.scanning .wifi-arc-2 { animation-delay: 0.15s; }
+.wifi-icon.scanning .wifi-arc-3 { animation-delay: 0.3s; }
+
+@keyframes wifi-scan {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
 .connection-dot {
     font-size: 8px;
 }
@@ -298,6 +576,57 @@ body {
     background: var(--accent-green);
     border-radius: 1px;
     transition: width 0.3s;
+}
+
+/* Power source indicator */
+.power-source-icon {
+    font-size: 11px;
+    margin-right: 2px;
+    display: inline-block;
+}
+
+.power-source-icon.usb::before {
+    content: '⚡';
+    color: var(--accent-cyan);
+}
+
+.power-source-icon.charging::before {
+    content: '⚡';
+    color: var(--accent-green);
+    animation: charging-pulse 1.5s ease-in-out infinite;
+}
+
+.power-source-icon.battery::before {
+    content: '';
+}
+
+@keyframes charging-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Battery charging state */
+.battery-mini.charging .battery-mini-level {
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+    animation: charging-fill 2s ease-in-out infinite;
+}
+
+@keyframes charging-fill {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* USB powered (no battery/full) */
+.battery-mini.usb-powered .battery-mini-icon {
+    border-color: var(--accent-cyan);
+}
+
+.battery-mini.usb-powered .battery-mini-icon::after {
+    background: var(--accent-cyan);
+}
+
+.battery-mini.usb-powered .battery-mini-level {
+    background: var(--accent-cyan);
 }
 
 /* ==================== FOOTER BAR (Camera/Lens Info) ==================== */
@@ -1421,6 +1750,7 @@ body {
     overflow: visible;
     z-index: 2;
     pointer-events: none;
+    transform: translateY(-1px);
 }
 
 /* Grid lines for secondary ribbon - generated dynamically via JS */
@@ -1470,11 +1800,12 @@ body {
     box-shadow:
         0 0 6px rgba(255, 136, 0, 0.9),
         0 0 12px rgba(255, 136, 0, 0.5);
-    transition: bottom 0.08s ease-out;
     pointer-events: none;
     z-index: 5;
     border-radius: 1px;
-    transform: translateY(-50%);
+    /* Short transition for smooth feel */
+    transition: bottom 0.03s linear, transform 0.03s linear;
+    will-change: bottom, transform;
 }
 
 /* Manual marks container for secondary ribbon (CH2) */
@@ -1486,6 +1817,7 @@ body {
     bottom: 0;
     pointer-events: none;
     z-index: 4;
+    transform: translateY(7px);
 }
 
 /* Manual mark indicator for CH2 - simple triangular arrows like focus marks */
@@ -1585,7 +1917,18 @@ body {
     letter-spacing: -0.5px;
 }
 
-.hc-pr-track {
+/* Track wrapper contains both the scrolling track and the fixed indicator */
+.hc-pr-track-wrapper,
+.hc-sr-track-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.hc-pr-track,
+.hc-sr-track {
     flex: 1;
     position: relative;
     display: flex;
@@ -1593,6 +1936,21 @@ body {
     /* Padding to give room for scale marks at 0% and 100% extremes */
     padding-top: var(--ribbon-scale-offset);
     padding-bottom: var(--ribbon-scale-offset);
+    /* Very short transition for smooth feel without lag */
+    transition: transform 0.03s linear;
+    will-change: transform;
+    /* Scale from center for ribbon zoom feature */
+    transform-origin: center center;
+}
+
+/* Scrolling mode: ribbon scrolls behind fixed indicator */
+/* Scroll offset and scale are calculated in JS */
+
+/* Static indicator mode: enhanced glow effect */
+.hc-pr-track-wrapper.static-indicator .hc-pr-focus-line,
+.hc-sr-track-wrapper.static-indicator .hc-sr-position-line {
+    height: 3px;
+    box-shadow: 0 0 8px var(--accent-cyan), 0 0 16px var(--accent-cyan);
 }
 
 /* Teradek-style: scale IS the bar - unified design */
@@ -1655,6 +2013,8 @@ body {
     overflow: visible;
     z-index: 2;
     pointer-events: none;
+    transform: translateY(-1px);
+
 }
 
 /* Grid lines for primary ribbon - generated dynamically via JS */
@@ -1712,10 +2072,13 @@ body {
     );
     border-top: 2px solid rgba(0, 255, 136, 0.6);
     border-bottom: 2px solid rgba(0, 255, 136, 0.6);
-    transition: bottom 0.15s ease-out, height 0.15s ease-out;
     pointer-events: none;
     z-index: 2;
     box-sizing: border-box;
+    transform: translateY(-3px);
+    /* Short transition for smooth feel */
+    transition: bottom 0.03s linear, height 0.03s linear;
+    will-change: bottom, height;
 }
 
 /* DOF zone at limits - hide border that would extend beyond scale bounds */
@@ -1739,12 +2102,12 @@ body {
         0 0 16px rgba(0, 212, 255, 0.6),
         0 0 24px rgba(0, 212, 255, 0.3),
         0 1px 3px rgba(0, 0, 0, 0.9);
-    transition: bottom 0.08s ease-out;
     pointer-events: none;
     z-index: 5;
     border-radius: 2px;
-    /* Center the line on its position */
-    transform: translateY(-50%);
+    /* Short transition for smooth feel */
+    transition: bottom 0.03s linear, transform 0.03s linear;
+    will-change: bottom, transform;
 }
 
 /* Mark indicators with labels */
@@ -3947,38 +4310,34 @@ body.is-dragging * {
 
 .hc-settings-tabs {
     display: flex;
+    flex-wrap: wrap;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-primary);
-    overflow-x: auto;
-    padding: 0 10px;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
-}
-
-.hc-settings-tabs::-webkit-scrollbar {
-    display: none; /* Chrome/Safari/Opera */
+    padding: 6px 8px;
+    gap: 4px;
 }
 
 .hc-settings-tab {
-    padding: 12px 14px;
+    padding: 6px 10px;
     font-size: 10px;
     font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
     border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
     white-space: nowrap;
     transition: all 0.2s;
 }
 
 .hc-settings-tab:hover {
     color: var(--text-primary);
+    background: var(--bg-card);
 }
 
 .hc-settings-tab.active {
     color: var(--accent-cyan);
-    border-bottom-color: var(--accent-cyan);
+    background: rgba(0, 212, 255, 0.15);
 }
 
 .hc-settings-body {
@@ -4462,6 +4821,333 @@ body.is-dragging * {
 
 .hc-settings-toggle.small.active::after {
     left: 16px;
+}
+
+/* ==================== WIFI SETTINGS UI ==================== */
+.hc-wifi-status {
+    margin-bottom: 12px;
+}
+
+.hc-wifi-current {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    border: 1px solid var(--border-primary);
+}
+
+.hc-wifi-current.connected {
+    border-color: var(--accent-green);
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.hc-wifi-current.disconnected {
+    border-color: var(--text-dim);
+}
+
+.hc-wifi-current-icon svg {
+    display: block;
+}
+
+.hc-wifi-current-info {
+    flex: 1;
+}
+
+.hc-wifi-current-ssid {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.hc-wifi-current-details {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.hc-wifi-mode-toggle {
+    display: flex;
+    gap: 6px;
+}
+
+.hc-wifi-mode-toggle .hc-settings-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+.hc-wifi-networks {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-secondary);
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+}
+
+.hc-wifi-network {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.hc-wifi-network:last-child {
+    border-bottom: none;
+}
+
+.hc-wifi-network:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.hc-wifi-network.connected {
+    background: rgba(0, 255, 136, 0.08);
+}
+
+.hc-wifi-network.connected .hc-wifi-ssid {
+    color: var(--accent-green);
+}
+
+.hc-wifi-network-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hc-wifi-ssid {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.hc-wifi-security {
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+.hc-wifi-bars {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 14px;
+}
+
+.hc-wifi-bars span {
+    width: 4px;
+    background: var(--text-dim);
+    border-radius: 1px;
+    opacity: 0.3;
+}
+
+.hc-wifi-bars span:nth-child(1) { height: 5px; }
+.hc-wifi-bars span:nth-child(2) { height: 9px; }
+.hc-wifi-bars span:nth-child(3) { height: 14px; }
+
+.hc-wifi-bars span.active {
+    background: var(--accent-green);
+    opacity: 1;
+}
+
+.hc-wifi-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+}
+
+.hc-settings-btn-small {
+    padding: 4px 10px;
+    font-size: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.hc-settings-btn-small:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.hc-settings-btn-small.scanning {
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.hc-settings-input {
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 12px;
+    width: 150px;
+}
+
+.hc-settings-input.small {
+    width: 180px;
+    font-size: 11px;
+    padding: 6px 8px;
+}
+
+.hc-settings-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+}
+
+/* ==================== SOFTWARE UPDATE UI ==================== */
+
+.hc-update-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.hc-update-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-primary);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.hc-update-progress {
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.hc-update-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.hc-update-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 59, 92, 0.15);
+    border: 1px solid var(--accent-red);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--accent-red);
+    font-size: 12px;
+}
+
+.hc-update-error-icon {
+    font-size: 14px;
+}
+
+.hc-update-none {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--accent-green-dim);
+    border-radius: 6px;
+    color: var(--accent-green);
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.hc-update-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.hc-update-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+}
+
+.hc-update-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hc-update-item-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.hc-update-item-version {
+    font-size: 11px;
+    color: var(--accent-cyan);
+}
+
+.hc-update-item-size {
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+.hc-update-btn {
+    padding: 6px 14px;
+    background: var(--accent-cyan);
+    border: none;
+    border-radius: 4px;
+    color: var(--bg-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hc-update-btn:hover {
+    background: var(--accent-cyan-dim);
+}
+
+.hc-update-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hc-settings-select {
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.hc-settings-select:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
 }
 
 /* ==================== PRESETS UI ==================== */

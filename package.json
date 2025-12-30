@@ -1,0 +1,9 @@
+{
+  "name": "axis-focus-simulator",
+  "version": "1.0.0",
+  "description": "AXIS Focus Simulator - Demo Version",
+  "private": true,
+  "scripts": {
+    "start": "npx serve ."
+  }
+}

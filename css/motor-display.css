@@ -1,0 +1,319 @@
+/**
+ * AXIS Focus - Motor Display Styles
+ * Nucleus-style OLED motor displays with color-coded LED indicators
+ */
+
+/* Container */
+.motor-displays {
+    padding: 20px;
+    background: #0a0a0f;
+}
+
+/* Grid layout for motor units */
+.motor-display-grid {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Individual motor unit - represents physical Nucleus-style motor */
+.motor-display-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    flex: 0 0 auto;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+.motor-display-unit:hover {
+    transform: translateY(-2px);
+}
+
+.motor-display-unit.selected {
+    filter: brightness(1.1);
+}
+
+.motor-display-unit.disconnected {
+    opacity: 0.5;
+}
+
+/* Motor body - the physical housing */
+.motor-body {
+    width: 100px;
+    background: linear-gradient(180deg,
+        #2a2a35 0%,
+        #1a1a22 20%,
+        #141418 80%,
+        #0a0a0e 100%
+    );
+    border-radius: 12px;
+    padding: 8px;
+    position: relative;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.5),
+        0 1px 3px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid #2a2a35;
+}
+
+/* LED ring at top - color-coded channel indicator */
+.motor-led-ring {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    transition: all 0.3s;
+    animation: led-glow 2s ease-in-out infinite;
+}
+
+.motor-led-ring.offline {
+    animation: none;
+}
+
+@keyframes led-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* OLED Screen */
+.motor-screen {
+    background: #000;
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid #1a1a22;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Screen header */
+.motor-screen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1a1a22;
+}
+
+.motor-channel {
+    font-size: 8px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+.motor-assignment {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #00d4ff;
+}
+
+/* Main value display */
+.motor-screen-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    text-align: center;
+    color: #00d4ff;
+    padding: 6px 0;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 10px currentColor;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Position bar */
+.motor-screen-bar {
+    height: 6px;
+    background: #111;
+    border-radius: 3px;
+    position: relative;
+    margin: 6px 0;
+    overflow: visible;
+}
+
+.motor-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, currentColor 0%, transparent 100%);
+    border-radius: 3px;
+    opacity: 0.4;
+    transition: width 0.15s ease-out;
+}
+
+.motor-bar-indicator {
+    position: absolute;
+    top: -2px;
+    width: 4px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px currentColor;
+    transition: left 0.15s ease-out;
+}
+
+/* Screen footer with status */
+.motor-screen-footer {
+    text-align: center;
+    padding-top: 4px;
+    border-top: 1px solid #1a1a22;
+}
+
+.motor-status {
+    font-size: 7px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.motor-status.online {
+    color: #00ff88;
+}
+
+.motor-status.offline {
+    color: #666;
+}
+
+/* Gear icon decoration */
+.motor-gear-icon {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    font-size: 10px;
+    color: #333;
+    opacity: 0.5;
+}
+
+/* Motor label underneath */
+.motor-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+/* ==================== Color assignments by channel ==================== */
+
+/* Focus - Cyan */
+[data-assignment="focus"] .motor-assignment,
+[data-assignment="focus"] .motor-screen-value,
+[data-assignment="focus"] .motor-bar-fill,
+[data-assignment="focus"] .motor-bar-indicator {
+    color: #00d4ff;
+}
+
+/* Iris - Orange */
+[data-assignment="iris"] .motor-assignment,
+[data-assignment="iris"] .motor-screen-value,
+[data-assignment="iris"] .motor-bar-fill,
+[data-assignment="iris"] .motor-bar-indicator {
+    color: #ff6b35;
+}
+
+/* Zoom - Green */
+[data-assignment="zoom"] .motor-assignment,
+[data-assignment="zoom"] .motor-screen-value,
+[data-assignment="zoom"] .motor-bar-fill,
+[data-assignment="zoom"] .motor-bar-indicator {
+    color: #00ff88;
+}
+
+/* Aux - Purple */
+[data-assignment="aux"] .motor-assignment,
+[data-assignment="aux"] .motor-screen-value,
+[data-assignment="aux"] .motor-bar-fill,
+[data-assignment="aux"] .motor-bar-indicator {
+    color: #b266ff;
+}
+
+/* None/Unassigned */
+[data-assignment="none"] .motor-assignment,
+[data-assignment="none"] .motor-screen-value {
+    color: #444;
+}
+
+/* Camera parameters - Yellow/Gold tones */
+[data-assignment="iso"] .motor-assignment,
+[data-assignment="iso"] .motor-screen-value,
+[data-assignment="iso"] .motor-bar-fill,
+[data-assignment="iso"] .motor-bar-indicator {
+    color: #ffcc00;
+}
+
+[data-assignment="fps"] .motor-assignment,
+[data-assignment="fps"] .motor-screen-value,
+[data-assignment="fps"] .motor-bar-fill,
+[data-assignment="fps"] .motor-bar-indicator {
+    color: #ff9966;
+}
+
+[data-assignment="wb"] .motor-assignment,
+[data-assignment="wb"] .motor-screen-value,
+[data-assignment="wb"] .motor-bar-fill,
+[data-assignment="wb"] .motor-bar-indicator {
+    color: #66ccff;
+}
+
+[data-assignment="shutter"] .motor-assignment,
+[data-assignment="shutter"] .motor-screen-value,
+[data-assignment="shutter"] .motor-bar-fill,
+[data-assignment="shutter"] .motor-bar-indicator {
+    color: #ff66cc;
+}
+
+[data-assignment="nd"] .motor-assignment,
+[data-assignment="nd"] .motor-screen-value,
+[data-assignment="nd"] .motor-bar-fill,
+[data-assignment="nd"] .motor-bar-indicator {
+    color: #99cc66;
+}
+
+/* ==================== Alternative compact layout ==================== */
+.motor-display-grid.compact {
+    gap: 8px;
+}
+
+.motor-display-grid.compact .motor-body {
+    width: 80px;
+    padding: 6px;
+}
+
+.motor-display-grid.compact .motor-screen-value {
+    font-size: 16px;
+    padding: 4px 0;
+}
+
+.motor-display-grid.compact .motor-led-ring {
+    height: 4px;
+}
+
+/* ==================== Horizontal layout option ==================== */
+.motor-display-grid.horizontal {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+/* ==================== Vertical layout option ==================== */
+.motor-display-grid.vertical {
+    flex-direction: column;
+    align-items: center;
+}
+
+.motor-display-grid.vertical .motor-display-unit {
+    flex-direction: row;
+    gap: 12px;
+}
+
+.motor-display-grid.vertical .motor-label {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}

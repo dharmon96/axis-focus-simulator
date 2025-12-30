@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS Focus - Control System UI</title>
+    <link rel="stylesheet" href="css/axis-styles.css">
+    <link rel="stylesheet" href="css/motor-display.css">
+    <link rel="stylesheet" href="css/motor-bridge.css">
+    <style>
+        /* Inline Simulator Panel */
+        .sim-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 320px;
+            height: 100vh;
+            background: #12121a;
+            border-left: 1px solid #2a2a3a;
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .sim-panel.open { transform: translateX(0); }
+        .sim-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #ff6b35;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1001;
+        }
+        .sim-toggle:hover { background: #ff8555; }
+        .sim-panel.open + .sim-toggle { right: 340px; }
+        .sim-header {
+            padding: 15px;
+            background: #1a1a25;
+            border-bottom: 1px solid #2a2a3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sim-header h3 { margin: 0; color: #ff6b35; font-size: 1rem; }
+        .sim-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+        .sim-section { padding: 12px 15px; border-bottom: 1px solid #2a2a3a; }
+        .sim-section h4 { margin: 0 0 10px 0; color: #00d4ff; font-size: 0.85rem; }
+        .sim-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+        .sim-row label { color: #e0e0e0; font-size: 0.8rem; }
+        .sim-row input[type="range"] { width: 120px; }
+        .sim-value { color: #00d4ff; font-family: monospace; min-width: 50px; text-align: right; }
+        .sim-btn { padding: 6px 12px; background: #1a1a25; border: 1px solid #2a2a3a; color: #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        .sim-btn:hover { background: #2a2a3a; }
+        .sim-btn.active { background: #00ff88; color: #000; border-color: #00ff88; }
+        .sim-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Subject card styles */
+        .sim-subject-card {
+            background: #1a1a25;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .sim-subject-card:hover {
+            background: #22222d;
+        }
+        .sim-subject-card.tracking {
+            border-color: var(--subject-color, #00ff88);
+            background: rgba(0, 255, 136, 0.08);
+        }
+        .sim-subject-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .sim-subject-num {
+            width: 20px;
+            height: 20px;
+            background: var(--subject-color, #888);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+        }
+        .sim-subject-card.tracking .sim-subject-num {
+            box-shadow: 0 0 8px var(--subject-color, #00ff88);
+        }
+        .sim-subject-name {
+            flex: 1;
+            background: #12121a;
+            border: 1px solid #2a2a3a;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #e0e0e0;
+            font-size: 11px;
+        }
+        .sim-subject-dist {
+            font-family: monospace;
+            font-size: 11px;
+            color: #00d4ff;
+            min-width: 45px;
+            text-align: right;
+        }
+        .sim-subject-track {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 50%;
+            background: #2a2a3a;
+            color: #666;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        .sim-subject-track:hover { background: #3a3a4a; }
+        .sim-subject-track.active { background: #00ff88; color: #000; }
+        .sim-subject-remove {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .sim-subject-remove:hover { background: rgba(255,68,68,0.2); color: #ff4444; }
+        .sim-subject-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sim-subject-controls input[type="range"] {
+            flex: 1;
+            accent-color: #00d4ff;
+        }
+        .sim-subject-auto {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: #888;
+        }
+        .sim-subject-auto input { accent-color: #ff8800; }
+        /* Recording button styles */
+        .sim-rec { padding: 8px 16px; background: #2a1a1a; border: 2px solid #ff4444; color: #ff4444; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+        .sim-rec:hover { background: #3a2a2a; }
+        .sim-rec.recording { background: #ff4444; color: #000; animation: rec-pulse 1s ease-in-out infinite; }
+        @keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+        /* Orange accent slider for zoom */
+        .sim-slider-orange {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100px;
+            height: 6px;
+            background: linear-gradient(90deg, #2a2520 0%, #3a3025 50%, #2a2520 100%);
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid #ff880040;
+        }
+        .sim-slider-orange::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff8800, #ffaa44);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 136, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+            border: 2px solid #ffcc88;
+        }
+        .sim-slider-orange::-webkit-slider-thumb:hover {
+            background: linear-gradient(135deg, #ffaa44, #ffcc66);
+            box-shadow: 0 0 12px rgba(255, 136, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+        .sim-slider-orange::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff8800, #ffaa44);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 136, 0, 0.6);
+            border: 2px solid #ffcc88;
+        }
+    </style>
+</head>
+<body>
+    <div id="simulator-banner" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, #ff6b35, #ff3b5c);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        z-index: 99999;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    ">
+        🎬 AXIS FOCUS SIMULATOR — Demo Version — Not for Production Use
+    </div>
+    <style>
+        body { padding-top: 36px !important; }
+        /* Hide SDI overlay section in simulator */
+        #sdi-overlay-container, .sdi-overlay-section, [id*="sdi-overlay"] { display: none !important; }
+    </style>
+
+    <div class="demo-container">
+        <!-- Header -->
+        <div class="demo-header">
+            <h1>AXIS FOCUS</h1>
+            <p>AI-Powered Wireless Focus Control System — Display UI</p>
+        </div>
+
+        <div class="demo-grid">
+            <!-- Left Column: Hand Controller -->
+            <div>
+                <div class="demo-section-title">Hand Controller Display</div>
+                <div id="hand-controller-container"></div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Focus Wheel -->
+                <div class="demo-section">
+                    <div class="demo-section-title">Focus Wheel Display (480×480)</div>
+                    <div class="wheel-display-wrapper">
+                        <div id="focus-wheel-container"></div>
+                    </div>
+                </div>
+
+                <!-- SDI Overlay -->
+                <div class="demo-section">
+                    <div class="demo-section-title">SDI 16:9 Overlay (1920×1080)</div>
+                    <div id="sdi-overlay-container"></div>
+                </div>
+
+                <!-- Motor Displays -->
+                <div class="demo-section">
+                    <div class="demo-section-title">Motor Units (Nucleus-style)</div>
+                    <div id="motor-display-container"></div>
+                </div>
+
+                <!-- Motor Bridge -->
+                <div class="demo-section">
+                    <div class="demo-section-title">Motor Bridge (Connection Status)</div>
+                    <div id="motor-bridge-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulator Panel (inline, no cross-origin issues) -->
+    <div class="sim-panel" id="sim-panel">
+        <div class="sim-header">
+            <h3>Hand Controller Simulator</h3>
+            <button class="sim-close" onclick="toggleSimPanel()">×</button>
+        </div>
+
+        <!-- Motor Connections -->
+        <div class="sim-section">
+            <h4>Motor Connections</h4>
+            <div class="sim-row">
+                <label style="color: #00d4ff;">M1 Focus</label>
+                <button class="sim-btn active" id="sim-motor0-btn" onclick="simToggleMotor(0)">ON</button>
+            </div>
+            <div class="sim-row">
+                <label style="color: #ff6b35;">M2 Zoom</label>
+                <button class="sim-btn active" id="sim-motor1-btn" onclick="simToggleMotor(1)">ON</button>
+            </div>
+            <div class="sim-row">
+                <label style="color: #00ff88;">M3 Iris</label>
+                <button class="sim-btn active" id="sim-motor2-btn" onclick="simToggleMotor(2)">ON</button>
+            </div>
+            <div class="sim-row">
+                <label style="color: #b266ff;">M4 Aux</label>
+                <button class="sim-btn" id="sim-motor3-btn" onclick="simToggleMotor(3)">OFF</button>
+            </div>
+        </div>
+
+        <!-- CH1 Knob (Focus) -->
+        <div class="sim-section">
+            <h4>CH1 Knob (Focus)</h4>
+            <div class="sim-row">
+                <input type="range" id="sim-focus" min="0" max="100" step="1" value="35"
+                       oninput="simUpdateFocusPosition(this.value)"
+                       onmousedown="simFocusKnobDown()"
+                       onmouseup="simFocusKnobUp()"
+                       ontouchstart="simFocusKnobDown()"
+                       ontouchend="simFocusKnobUp()">
+                <span class="sim-value" id="sim-focus-val">2.4m</span>
+            </div>
+            <div class="sim-row" style="gap: 5px; justify-content: flex-start; flex-wrap: wrap;">
+                <button class="sim-btn" onclick="simSetMarkA()" id="sim-mark-a-btn">A</button>
+                <button class="sim-btn" onclick="simSetMarkB()" id="sim-mark-b-btn">B</button>
+                <button class="sim-btn" onclick="simSetMarkC()" id="sim-mark-c-btn">C</button>
+                <button class="sim-btn" onclick="simSetMarkD()" id="sim-mark-d-btn">D</button>
+                <button class="sim-btn" style="background:#1a3020;border-color:#00ff88;color:#00ff88;" onclick="simSetMark()">SET</button>
+                <button class="sim-btn" style="background:#301a1a;border-color:#ff4444;color:#ff4444;" onclick="simDeleteNearestMark()">DEL</button>
+                <button class="sim-btn" onclick="simToggleABLimit()" id="sim-ab-limit-btn" title="Restrict focus range to A-B marks">A⟷B</button>
+            </div>
+        </div>
+
+        <!-- CH2 Knob (Zoom/Iris based on lens) -->
+        <div class="sim-section">
+            <h4 id="sim-ch2-label" style="color: #ff8800;">CH2 Knob (Zoom)</h4>
+            <div class="sim-row">
+                <span style="color: #ff8800; font-size: 0.7rem; font-weight: 600;" id="sim-ch2-min">W</span>
+                <input type="range" id="sim-zoom" min="0" max="100" step="1" value="50"
+                       oninput="simUpdateCh2(this.value)"
+                       class="sim-slider-orange">
+                <span style="color: #ff8800; font-size: 0.7rem; font-weight: 600;" id="sim-ch2-max">T</span>
+                <span class="sim-value" id="sim-zoom-val" style="color: #ff8800;">50mm</span>
+            </div>
+            <div class="sim-row" style="gap: 5px; justify-content: flex-start; flex-wrap: wrap; margin-top: 5px;">
+                <button class="sim-btn" onclick="simSetCh2MarkX()" id="sim-ch2-mark-x-btn">X</button>
+                <button class="sim-btn" onclick="simSetCh2MarkY()" id="sim-ch2-mark-y-btn">Y</button>
+                <button class="sim-btn" onclick="simSetCh2MarkZ()" id="sim-ch2-mark-z-btn">Z</button>
+                <button class="sim-btn" style="background:#301a1a;border-color:#ff4444;color:#ff4444;" onclick="simDeleteNearestCh2Mark()">DEL</button>
+                <button class="sim-btn" onclick="simToggleCh2XZLimit()" id="sim-ch2-xz-limit-btn" title="Restrict CH2 range to X-Z marks">X⟷Z</button>
+            </div>
+        </div>
+
+        <!-- CH3 Knob (Iris for zoom lens, ISO for prime) -->
+        <div class="sim-section">
+            <h4 id="sim-ch3-label" style="color: #00ff88;">CH3 Knob (Iris)</h4>
+            <div class="sim-row">
+                <input type="range" id="sim-iris" min="0" max="100" step="1" value="20" oninput="simUpdateCh3(this.value)">
+                <span class="sim-value" id="sim-iris-val" style="color: #00ff88;">T4.4</span>
+            </div>
+        </div>
+
+        <!-- CH4 Knob (ISO for zoom lens, WB for prime) -->
+        <div class="sim-section">
+            <h4 id="sim-ch4-label" style="color: #b266ff;">CH4 Knob (ISO)</h4>
+            <div class="sim-row">
+                <input type="range" id="sim-aux" min="0" max="100" step="1" value="50" oninput="simUpdateCh4(this.value)">
+                <span class="sim-value" id="sim-aux-val" style="color: #b266ff;">800</span>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="sim-section">
+            <h4>Control Buttons</h4>
+            <div class="sim-row" style="gap: 8px; flex-wrap: wrap;">
+                <button class="sim-rec" id="sim-rec-btn" onclick="simToggleRec()">● REC</button>
+                <button class="sim-btn active" id="sim-ai-btn" onclick="simToggleAI()">AI</button>
+                <button class="sim-btn" onclick="simSetMark()">SET</button>
+                <button class="sim-btn" onclick="simToggleLock()" id="sim-lock-btn">LOCK</button>
+            </div>
+        </div>
+
+        <!-- AI Subjects (Simulated Detection) -->
+        <div class="sim-section">
+            <h4 style="display:flex;justify-content:space-between;align-items:center;">
+                <span>AI Subjects</span>
+                <span style="font-size:0.7rem;color:#666;" id="sim-subject-count">2/5</span>
+            </h4>
+            <div class="sim-row" style="margin-bottom:12px;">
+                <label>Simulate Movement</label>
+                <button class="sim-btn" id="sim-movement-btn" onclick="simToggleMovement()">OFF</button>
+            </div>
+            <div id="sim-subjects-list">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="sim-row" style="margin-top:10px;">
+                <button class="sim-btn" id="sim-add-subject" onclick="simAddSubject()" style="flex:1;">+ Add Subject</button>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="sim-section">
+            <h4>System</h4>
+            <div class="sim-row">
+                <label>Battery</label>
+                <input type="range" id="sim-battery" min="0" max="100" value="75" oninput="simUpdateBattery(this.value)">
+                <span class="sim-value" id="sim-battery-val">75%</span>
+            </div>
+            <div class="sim-row">
+                <label>Link Quality</label>
+                <input type="range" id="sim-link" min="0" max="100" value="95" oninput="simUpdateLink(this.value)">
+                <span class="sim-value" id="sim-link-val">95%</span>
+            </div>
+        </div>
+
+        <!-- Focus Marks -->
+        <div class="sim-section">
+            <h4>Focus Marks</h4>
+            <div class="sim-row">
+                <button class="sim-btn" onclick="simAddMark()">+ Add Mark</button>
+                <button class="sim-btn" onclick="simClearMarks()">Clear All</button>
+            </div>
+        </div>
+    </div>
+    <button class="sim-toggle" id="sim-toggle" onclick="toggleSimPanel()">Simulator</button>
+
+    <!-- Load Core Modules -->
+    <script src="js/core/constants.js"></script>
+    <script src="js/axis-state.js"></script>
+    <script src="js/axis-scale.js"></script>
+
+    <!-- Load Utility Modules -->
+    <script src="js/utils/dof-calculator.js"></script>
+    <script src="js/utils/lens-utils.js"></script>
+
+    <!-- Load Core Managers -->
+    <script src="js/core/channel-manager.js"></script>
+    <script src="js/components/focus-marks-manager.js"></script>
+
+    <!-- Load Communication -->
+    <script src="js/axis-websocket.js"></script>
+
+    <!-- Load UI Components -->
+    <script src="js/hand-controller.js"></script>
+    <script src="js/focus-wheel.js"></script>
+    
+    <script src="js/motor-display.js"></script>
+    <script src="js/motor-bridge.js"></script>
+
+    <script>
+        // Toggle simulator panel
+        function toggleSimPanel() {
+            document.getElementById('sim-panel').classList.toggle('open');
+        }
+
+        // === USE CENTRALIZED AXIS SCALE FOR ALL CONVERSIONS ===
+        // This ensures consistency across all components
+
+        // Focus: position 0 = minFocus, position 1 = infinity
+        function positionToDistance(pos, lens) {
+            return AXISScale.positionToDistance(pos, lens?.minFocus);
+        }
+
+        function distanceToPosition(dist, lens) {
+            return AXISScale.distanceToPosition(dist, lens?.minFocus);
+        }
+
+        // Iris: position 0 = wide open (maxAperture), position 1 = stopped down (minAperture)
+        function positionToAperture(pos, lens) {
+            return AXISScale.positionToAperture(pos, lens);
+        }
+
+        function apertureToPosition(aperture, lens) {
+            return AXISScale.apertureToPosition(aperture, lens);
+        }
+
+        // Zoom: position 0 = wide (minFocalLength), position 1 = tele (maxFocalLength)
+        function positionToFocal(pos, lens) {
+            return AXISScale.positionToFocalLength(pos, lens);
+        }
+
+        function focalToPosition(focal, lens) {
+            return AXISScale.focalLengthToPosition(focal, lens);
+        }
+
+        function formatDistance(dist) {
+            return AXISScale.formatDistance(dist);
+        }
+
+        function formatAperture(aperture, lens) {
+            return AXISScale.formatAperture(aperture, lens?.apertureType);
+        }
+
+        // Wheel damping state
+        let wheelDampingTarget = null;
+        let wheelDampingCurrent = null;
+        let wheelDampingInterval = null;
+
+        // Apply wheel damping/smoothing to focus updates
+        function applyWheelDamping(targetDistance) {
+            const wheelSettings = AXISState.get('wheel') || {};
+            const damping = wheelSettings.damping || 0;
+
+            // If no damping, apply immediately
+            if (damping === 0) {
+                AXISState.setFocusDistance(targetDistance);
+                return;
+            }
+
+            // Set up damping
+            wheelDampingTarget = targetDistance;
+            if (wheelDampingCurrent === null) {
+                wheelDampingCurrent = AXISState.get('focus.distance');
+            }
+
+            // Start damping interval if not running
+            if (!wheelDampingInterval) {
+                wheelDampingInterval = setInterval(() => {
+                    if (wheelDampingTarget === null) {
+                        clearInterval(wheelDampingInterval);
+                        wheelDampingInterval = null;
+                        return;
+                    }
+
+                    // Calculate smoothing factor (higher damping = slower response)
+                    // damping 0 = instant (factor 1.0), damping 100 = very smooth (factor 0.05)
+                    const smoothingFactor = 1 - (damping / 100) * 0.95;
+
+                    // Apply exponential smoothing
+                    wheelDampingCurrent = wheelDampingCurrent +
+                        (wheelDampingTarget - wheelDampingCurrent) * smoothingFactor;
+
+                    AXISState.setFocusDistance(wheelDampingCurrent);
+
+                    // Stop if close enough to target
+                    if (Math.abs(wheelDampingCurrent - wheelDampingTarget) < 0.001) {
+                        AXISState.setFocusDistance(wheelDampingTarget);
+                        wheelDampingTarget = null;
+                        wheelDampingCurrent = null;
+                        clearInterval(wheelDampingInterval);
+                        wheelDampingInterval = null;
+                    }
+                }, 16); // ~60fps
+            }
+        }
+
+        // Focus Knob - sends normalized position (0-1)
+        // In A-B limit mode, remaps knob range to A-B mark range
+        function simUpdateFocusPosition(sliderVal) {
+            const pos = parseFloat(sliderVal) / 100;  // Convert 0-100 slider to 0-1
+            const lens = AXISState.get('lens');
+
+            // Check if A-B limit mode is active
+            const abRange = getABLimitRange();
+            let distance;
+
+            if (abRange) {
+                // Remap 0-1 position to A-B distance range
+                distance = abRange.min + pos * (abRange.max - abRange.min);
+            } else {
+                // Normal full-range operation
+                distance = positionToDistance(pos, lens);
+            }
+
+            // Apply wheel damping (smoothing) if enabled
+            applyWheelDamping(distance);
+            document.getElementById('sim-focus').value = sliderVal;
+            document.getElementById('sim-focus-val').textContent = formatDistance(distance);
+        }
+
+        // Jump to mark A or B
+        function simJumpToMark(name) {
+            const marks = AXISState.get('manualMarks');
+            const lens = AXISState.get('lens');
+            const mark = marks.find(m => m.name === name);
+            if (mark) {
+                const pos = distanceToPosition(mark.distance, lens) * 100;
+                simUpdateFocusPosition(pos);
+            }
+        }
+
+        // Jump to exact distance (e.g., 5m, 10m)
+        function simJumpToDistance(distanceMeters) {
+            const lens = AXISState.get('lens');
+            const pos = distanceToPosition(distanceMeters, lens) * 100;
+            simUpdateFocusPosition(pos);
+        }
+
+        // Channel 2 Control (Zoom or Iris based on assignment)
+        // In A-B limit mode, remaps knob range to A-B mark range
+        function simUpdateCh2(sliderVal) {
+            let pos = parseFloat(sliderVal) / 100;  // Normalize to 0-1
+            const channels = AXISState.get('channels');
+            const lens = AXISState.get('lens');
+            const ch2 = channels[1];  // Channel 2 (0-indexed)
+
+            // Check if CH2 X-Z limit mode is active
+            const xzRange = getCh2XZLimitRange();
+            if (xzRange) {
+                // Remap 0-1 slider position to X-Z position range
+                pos = xzRange.min + pos * (xzRange.max - xzRange.min);
+            }
+
+            if (ch2.assignment === 'iris') {
+                const aperture = positionToAperture(pos, lens);
+                AXISState.updateMotor(2, { value: aperture, position: pos });
+                document.getElementById('sim-zoom-val').textContent = formatAperture(aperture, lens);
+            } else if (ch2.assignment === 'zoom') {
+                const focal = positionToFocal(pos, lens);
+                AXISState.updateMotor(1, { value: Math.round(focal), position: pos });
+                AXISState.set('lens.focalLength', Math.round(focal));
+                document.getElementById('sim-zoom-val').textContent = Math.round(focal) + 'mm';
+            } else if (ch2.assignment === 'aux') {
+                AXISState.updateMotor(3, { value: pos * 100, position: pos });
+                document.getElementById('sim-zoom-val').textContent = Math.round(pos * 100) + '%';
+            }
+        }
+
+        // Channel 3 Control (Iris for zoom lens, camera params for prime)
+        function simUpdateCh3(sliderVal) {
+            const pos = parseFloat(sliderVal) / 100;
+            const channels = AXISState.get('channels');
+            const lens = AXISState.get('lens');
+            const camera = AXISState.get('camera');
+            const ch3 = channels[2];
+
+            if (ch3.assignment === 'iris') {
+                const aperture = positionToAperture(pos, lens);
+                AXISState.updateMotor(2, { value: aperture, position: pos });
+                document.getElementById('sim-iris-val').textContent = formatAperture(aperture, lens);
+            } else if (ch3.assignment === 'iso') {
+                const isoList = camera.availableISO || [100, 200, 400, 800, 1600, 3200];
+                const idx = Math.round(pos * (isoList.length - 1));
+                const iso = isoList[idx];
+                AXISState.set('camera.iso', iso);
+                document.getElementById('sim-iris-val').textContent = 'ISO ' + iso;
+            } else if (ch3.assignment === 'shutter') {
+                const shutterList = camera.availableShutter || [45, 90, 180, 360];
+                const idx = Math.round(pos * (shutterList.length - 1));
+                const shutter = shutterList[idx];
+                AXISState.set('camera.shutter', shutter);
+                document.getElementById('sim-iris-val').textContent = shutter + '°';
+            } else if (ch3.assignment === 'fps') {
+                const fpsList = camera.availableFPS || [23.976, 24, 25, 30, 48, 60, 120];
+                const idx = Math.round(pos * (fpsList.length - 1));
+                const fps = fpsList[idx];
+                AXISState.set('camera.fps', fps);
+                document.getElementById('sim-iris-val').textContent = fps + ' fps';
+            } else if (ch3.assignment === 'wb') {
+                const wbList = camera.availableWB || [2800, 3200, 4300, 5600, 6500];
+                const idx = Math.round(pos * (wbList.length - 1));
+                const wb = wbList[idx];
+                AXISState.set('camera.wb', wb);
+                document.getElementById('sim-iris-val').textContent = wb + 'K';
+            } else if (ch3.assignment === 'nd') {
+                const ndList = [0, 2, 4, 6, 8];
+                const idx = Math.round(pos * (ndList.length - 1));
+                const nd = ndList[idx];
+                AXISState.set('camera.nd', nd);
+                document.getElementById('sim-iris-val').textContent = 'ND ' + nd;
+            }
+        }
+
+        // Channel 4 Control (ISO for zoom lens, WB for prime)
+        function simUpdateCh4(sliderVal) {
+            const pos = parseFloat(sliderVal) / 100;
+            const channels = AXISState.get('channels');
+            const camera = AXISState.get('camera');
+            const lens = AXISState.get('lens');
+            const ch4 = channels[3];
+
+            if (ch4.assignment === 'iso') {
+                const isoList = camera.availableISO || [100, 200, 400, 800, 1600, 3200];
+                const idx = Math.round(pos * (isoList.length - 1));
+                const iso = isoList[idx];
+                AXISState.set('camera.iso', iso);
+                document.getElementById('sim-aux-val').textContent = 'ISO ' + iso;
+            } else if (ch4.assignment === 'wb') {
+                const wbList = camera.availableWB || [2800, 3200, 4300, 5600, 6500];
+                const idx = Math.round(pos * (wbList.length - 1));
+                const wb = wbList[idx];
+                AXISState.set('camera.wb', wb);
+                document.getElementById('sim-aux-val').textContent = wb + 'K';
+            } else if (ch4.assignment === 'fps') {
+                const fpsList = camera.availableFPS || [23.976, 24, 25, 30, 48, 60, 120];
+                const idx = Math.round(pos * (fpsList.length - 1));
+                const fps = fpsList[idx];
+                AXISState.set('camera.fps', fps);
+                document.getElementById('sim-aux-val').textContent = fps + ' fps';
+            } else if (ch4.assignment === 'shutter') {
+                const shutterList = camera.availableShutter || [45, 90, 180, 360];
+                const idx = Math.round(pos * (shutterList.length - 1));
+                const shutter = shutterList[idx];
+                AXISState.set('camera.shutter', shutter);
+                document.getElementById('sim-aux-val').textContent = shutter + '°';
+            } else if (ch4.assignment === 'nd') {
+                const ndList = [0, 2, 4, 6, 8];
+                const idx = Math.round(pos * (ndList.length - 1));
+                const nd = ndList[idx];
+                AXISState.set('camera.nd', nd);
+                document.getElementById('sim-aux-val').textContent = 'ND ' + nd;
+            } else if (ch4.assignment === 'iris') {
+                const aperture = positionToAperture(pos, lens);
+                AXISState.updateMotor(2, { value: aperture, position: pos });
+                document.getElementById('sim-aux-val').textContent = formatAperture(aperture, lens);
+            } else if (ch4.assignment === 'aux') {
+                AXISState.updateMotor(3, { value: pos * 100, position: pos });
+                document.getElementById('sim-aux-val').textContent = Math.round(pos * 100) + '%';
+            }
+        }
+
+        // Update channel slider UIs when assignments change
+        function updateChannelSliderUIs() {
+            const channels = AXISState.get('channels');
+            const lens = AXISState.get('lens');
+            const camera = AXISState.get('camera');
+
+            // CH2
+            const ch2 = channels[1];
+            const ch2Label = document.getElementById('sim-ch2-label');
+            const ch2Min = document.getElementById('sim-ch2-min');
+            const ch2Max = document.getElementById('sim-ch2-max');
+            if (ch2Label) ch2Label.textContent = 'CH2 Knob (' + ch2.assignment.charAt(0).toUpperCase() + ch2.assignment.slice(1) + ')';
+            if (ch2.assignment === 'zoom') {
+                if (ch2Min) ch2Min.textContent = 'W';
+                if (ch2Max) ch2Max.textContent = 'T';
+            } else if (ch2.assignment === 'iris') {
+                if (ch2Min) ch2Min.textContent = 'O';
+                if (ch2Max) ch2Max.textContent = 'C';
+            }
+
+            // CH3
+            const ch3 = channels[2];
+            const ch3Label = document.getElementById('sim-ch3-label');
+            if (ch3Label) ch3Label.textContent = 'CH3 Knob (' + ch3.assignment.charAt(0).toUpperCase() + ch3.assignment.slice(1) + ')';
+
+            // CH4
+            const ch4 = channels[3];
+            const ch4Label = document.getElementById('sim-ch4-label');
+            if (ch4Label) ch4Label.textContent = 'CH4 Knob (' + ch4.assignment.charAt(0).toUpperCase() + ch4.assignment.slice(1) + ')';
+        }
+
+        // Listen for channel changes
+        AXISState.subscribe('channels', updateChannelSliderUIs);
+
+        // Debug: Grid line adjustments
+        function updateGridOffset(val) {
+            document.documentElement.style.setProperty('--ribbon-grid-offset', val + 'px');
+            document.getElementById('debug-grid-offset-val').textContent = val + 'px';
+        }
+
+        function updateGridOpacity(val) {
+            const opacity = parseFloat(val) / 100;
+            document.getElementById('debug-grid-opacity-val').textContent = val + '%';
+            document.querySelectorAll('.hc-pr-grid-line:not(.sub):not(.sub2), .hc-sr-grid-line:not(.sub):not(.sub2)').forEach(el => {
+                el.style.background = `rgba(255,255,255,${opacity})`;
+            });
+            document.querySelectorAll('.hc-pr-grid-line.sub, .hc-sr-grid-line.sub').forEach(el => {
+                el.style.background = `rgba(255,255,255,${opacity * 0.5})`;
+            });
+            document.querySelectorAll('.hc-pr-grid-line.sub2, .hc-sr-grid-line.sub2').forEach(el => {
+                el.style.background = `rgba(255,255,255,${opacity * 0.25})`;
+            });
+        }
+
+        function updateScaleOffset(val) {
+            document.documentElement.style.setProperty('--ribbon-scale-offset', val + 'px');
+            document.getElementById('debug-scale-offset-val').textContent = val + 'px';
+        }
+
+        function updateMarkOffset(val) {
+            document.documentElement.style.setProperty('--ribbon-mark-offset', val + 'px');
+            document.getElementById('debug-mark-offset-val').textContent = val + 'px';
+        }
+
+        // Motor Connection Toggles
+        function simToggleMotor(motorIndex) {
+            const motors = AXISState.get('motors');
+            const motor = motors[motorIndex];
+            if (!motor) return;
+
+            const newConnected = !motor.connected;
+            AXISState.updateMotor(motorIndex, { connected: newConnected });
+
+            const btn = document.getElementById(`sim-motor${motorIndex}-btn`);
+            if (btn) {
+                btn.classList.toggle('active', newConnected);
+                btn.textContent = newConnected ? 'ON' : 'OFF';
+            }
+        }
+
+        // Control Buttons
+        function simToggleRec() {
+            const current = AXISState.get('system.recording');
+            AXISState.set('system.recording', !current);
+            const btn = document.getElementById('sim-rec-btn');
+            btn.classList.toggle('recording', !current);
+            btn.textContent = !current ? '■ STOP' : '● REC';
+        }
+
+        function simToggleAI() {
+            const current = AXISState.get('ai.enabled');
+            AXISState.set('ai.enabled', !current);
+            document.getElementById('sim-ai-btn').classList.toggle('active', !current);
+        }
+
+        function simSetMark() {
+            const colors = ['#ff6b35', '#00d4ff', '#00ff88', '#ffcc00', '#ff44ff'];
+            const marks = AXISState.get('manualMarks');
+            AXISState.addManualMark({
+                label: 'Mark ' + (marks.length + 1),
+                color: colors[marks.length % colors.length]
+            });
+        }
+
+        let focusLocked = false;
+        function simToggleLock() {
+            focusLocked = !focusLocked;
+            document.getElementById('sim-lock-btn').classList.toggle('active', focusLocked);
+            // Could disable focus updates when locked
+        }
+
+        // AI Subjects - New interactive panel
+        let simMovementInterval = null;
+        let simSubjectMovement = new Map();
+        let lastSubjectCount = 0;
+        let lastTrackingIndex = -1;
+
+        // Subject colors matching hand unit
+        const aiSubjectColors = ['#ff6b35', '#00d4ff', '#00ff88', '#ffcc00', '#ff44ff'];
+
+        function simRenderSubjects() {
+            const ai = AXISState.get('ai');
+            const subjects = ai.subjects || [];
+            const container = document.getElementById('sim-subjects-list');
+            const countEl = document.getElementById('sim-subject-count');
+            const addBtn = document.getElementById('sim-add-subject');
+
+            // Find current tracking index
+            const trackingIndex = subjects.findIndex(s => s.tracking);
+
+            // Only do full re-render if subject count changed
+            // Otherwise just update tracking state and distances
+            const needsFullRender = subjects.length !== lastSubjectCount;
+
+            if (needsFullRender) {
+                lastSubjectCount = subjects.length;
+                countEl.textContent = subjects.length + '/5';
+                addBtn.classList.toggle('disabled', subjects.length >= 5);
+
+                container.innerHTML = subjects.map((subject, i) => {
+                    const color = aiSubjectColors[i % aiSubjectColors.length];
+                    return `
+                    <div class="sim-subject-card ${subject.tracking ? 'tracking' : ''}" data-index="${i}" style="--subject-color: ${color}">
+                        <div class="sim-subject-header">
+                            <div class="sim-subject-num">${i + 1}</div>
+                            <span class="sim-subject-name-display">${subject.label}</span>
+                            <span class="sim-subject-dist">${subject.distance.toFixed(2)}m</span>
+                            <button class="sim-subject-remove" onclick="event.stopPropagation(); simRemoveSubject(${i})" title="Remove">×</button>
+                        </div>
+                        <div class="sim-subject-controls">
+                            <input type="range" min="0.3" max="20" step="0.05" value="${subject.distance}"
+                                oninput="simUpdateSubjectDist(${i}, this.value)">
+                            <label class="sim-subject-auto">
+                                <input type="checkbox" ${subject.autoMove ? 'checked' : ''} onchange="simToggleAutoMove(${i}, this.checked)">
+                                Auto
+                            </label>
+                        </div>
+                    </div>
+                `}).join('');
+            } else {
+                // Just update tracking state if it changed
+                if (trackingIndex !== lastTrackingIndex) {
+                    container.querySelectorAll('.sim-subject-card').forEach((card, i) => {
+                        card.classList.toggle('tracking', i === trackingIndex);
+                    });
+                }
+
+                // Update distances and slider values (for movement simulation)
+                subjects.forEach((s, i) => {
+                    const card = container.querySelector(`.sim-subject-card[data-index="${i}"]`);
+                    if (card) {
+                        const distEl = card.querySelector('.sim-subject-dist');
+                        const slider = card.querySelector('input[type="range"]');
+                        if (distEl) distEl.textContent = s.distance.toFixed(2) + 'm';
+                        if (slider && document.activeElement !== slider) {
+                            slider.value = s.distance;
+                        }
+                    }
+                });
+            }
+
+            lastTrackingIndex = trackingIndex;
+        }
+
+        function simAddSubject() {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            if (subjects.length >= 5) return;
+
+            const newId = Math.max(0, ...subjects.map(s => s.id)) + 1;
+            subjects.push({
+                id: newId,
+                type: 'face',
+                label: 'Subject ' + (subjects.length + 1),
+                distance: 2.0 + Math.random() * 3,
+                position: { x: 0.3 + Math.random() * 0.4, y: 0.3 + Math.random() * 0.4 },
+                size: { w: 0.1, h: 0.15 },
+                confidence: 85 + Math.floor(Math.random() * 10),
+                tracking: subjects.length === 0,
+                autoMove: false
+            });
+            AXISState.set('ai.subjects', subjects);
+            simRenderSubjects();
+        }
+
+        function simRemoveSubject(index) {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            if (index >= 0 && index < subjects.length) {
+                const wasTracking = subjects[index].tracking;
+                subjects.splice(index, 1);
+                if (wasTracking && subjects.length > 0) {
+                    subjects[0].tracking = true;
+                }
+                AXISState.set('ai.subjects', subjects);
+                simRenderSubjects();
+            }
+        }
+
+        // Select a subject for tracking (click on card)
+        function simSelectSubject(event, index) {
+            // Don't select if clicking on interactive elements
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            simSetTracking(index);
+        }
+
+        function simSetTracking(index) {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            const wasTracking = subjects.findIndex(s => s.tracking);
+
+            // Only update if tracking actually changed
+            if (wasTracking === index) {
+                return;
+            }
+
+            // Set tracking state
+            subjects.forEach((s, i) => s.tracking = (i === index));
+
+            // Update state - this will trigger subscribers
+            AXISState.set('ai.subjects', subjects);
+
+            // Directly update DOM for immediate visual feedback
+            const container = document.getElementById('sim-subjects-list');
+            if (container) {
+                container.querySelectorAll('.sim-subject-card').forEach((card, i) => {
+                    card.classList.toggle('tracking', i === index);
+                });
+            }
+
+            // Update lastTrackingIndex so render knows state is current
+            lastTrackingIndex = index;
+        }
+
+        function simUpdateSubjectName(index, name) {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            if (subjects[index]) {
+                subjects[index].label = name;
+                AXISState.set('ai.subjects', subjects);
+            }
+        }
+
+        function simUpdateSubjectDist(index, val) {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            if (subjects[index]) {
+                subjects[index].distance = parseFloat(val);
+                AXISState.set('ai.subjects', subjects);
+                // Update display without full re-render
+                const card = document.querySelector(`.sim-subject-card[data-index="${index}"]`);
+                if (card) {
+                    card.querySelector('.sim-subject-dist').textContent = parseFloat(val).toFixed(2) + 'm';
+                }
+            }
+        }
+
+        function simToggleAutoMove(index, checked) {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            if (subjects[index]) {
+                subjects[index].autoMove = checked;
+                AXISState.set('ai.subjects', subjects);
+            }
+        }
+
+        function simToggleMovement() {
+            const btn = document.getElementById('sim-movement-btn');
+            const isActive = btn.classList.contains('active');
+
+            if (isActive) {
+                // Stop movement
+                if (simMovementInterval) {
+                    clearInterval(simMovementInterval);
+                    simMovementInterval = null;
+                }
+                btn.classList.remove('active');
+                btn.textContent = 'OFF';
+                AXISState.set('ai.simulateMovement', false);
+            } else {
+                // Start movement
+                btn.classList.add('active');
+                btn.textContent = 'ON';
+                AXISState.set('ai.simulateMovement', true);
+                simStartMovement();
+            }
+        }
+
+        function simStartMovement() {
+            if (simMovementInterval) return;
+
+            let lastTime = performance.now();
+
+            simMovementInterval = setInterval(() => {
+                const now = performance.now();
+                const dt = (now - lastTime) / 1000; // Delta time in seconds
+                lastTime = now;
+
+                // Read FRESH state right before modifying
+                const ai = AXISState.get('ai');
+                if (!ai.subjects || ai.subjects.length === 0) return;
+
+                // Calculate new distances but preserve tracking from CURRENT state
+                const distanceUpdates = new Map();
+
+                ai.subjects.forEach((subject, i) => {
+                    if (!subject.autoMove) return;
+
+                    let state = simSubjectMovement.get(i);
+                    if (!state) {
+                        state = { dir: Math.random() > 0.5 ? 1 : -1, speed: 0.3 + Math.random() * 0.5, timer: 0 };
+                        simSubjectMovement.set(i, state);
+                    }
+
+                    state.timer += dt;
+                    if (state.timer > 2 + Math.random() * 3) {
+                        state.dir *= -1;
+                        state.timer = 0;
+                        state.speed = 0.3 + Math.random() * 0.5;
+                    }
+
+                    let newDist = subject.distance + state.dir * state.speed * dt;
+                    newDist = Math.max(0.5, Math.min(15, newDist));
+                    if (newDist <= 0.6 || newDist >= 14) state.dir *= -1;
+
+                    distanceUpdates.set(i, newDist);
+                });
+
+                if (distanceUpdates.size > 0) {
+                    // Update distances directly in state WITHOUT re-reading/replacing entire subjects array
+                    // This prevents race conditions with tracking state changes
+                    distanceUpdates.forEach((newDist, subjectIndex) => {
+                        AXISState.set(`ai.subjects.${subjectIndex}.distance`, newDist);
+                    });
+                }
+
+                // Update slider positions directly
+                ai.subjects.forEach((s, i) => {
+                    const newDist = distanceUpdates.get(i) ?? s.distance;
+                    const card = document.querySelector(`.sim-subject-card[data-index="${i}"]`);
+                    if (card) {
+                        const distEl = card.querySelector('.sim-subject-dist');
+                        const rangeEl = card.querySelector('input[type="range"]');
+                        if (distEl) distEl.textContent = newDist.toFixed(2) + 'm';
+                        if (rangeEl) rangeEl.value = newDist;
+                    }
+                });
+            }, 33); // ~30fps for smooth movement
+        }
+
+        // System
+        function simUpdateBattery(val) {
+            AXISState.set('battery.level', parseInt(val));
+            document.getElementById('sim-battery-val').textContent = val + '%';
+        }
+
+        function simUpdateLink(val) {
+            AXISState.set('system.linkQuality', parseInt(val));
+            document.getElementById('sim-link-val').textContent = val + '%';
+        }
+
+        // Marks
+        function simAddMark() {
+            simSetMark();
+        }
+
+        function simClearMarks() {
+            AXISState.set('manualMarks', []);
+        }
+
+        // Set/Get Mark A
+        function simSetMarkA() {
+            const marks = AXISState.get('manualMarks');
+            const focus = AXISState.get('focus');
+            const existingA = marks.find(m => m.name === 'A');
+
+            if (existingA) {
+                // Jump to mark A
+                AXISState.setFocusDistance(existingA.distance);
+                simStopAITracking(); // Stop tracking when clicking manual mark
+            } else {
+                // Set mark A at current position - use preset color
+                AXISState.addManualMark({
+                    name: 'A',
+                    label: 'Mark A',
+                    distance: focus.distance
+                });
+                // Update button state
+                updateMarkButtons();
+            }
+        }
+
+        // Set/Get Mark B
+        function simSetMarkB() {
+            const marks = AXISState.get('manualMarks');
+            const focus = AXISState.get('focus');
+            const existingB = marks.find(m => m.name === 'B');
+
+            if (existingB) {
+                // Jump to mark B
+                AXISState.setFocusDistance(existingB.distance);
+                simStopAITracking(); // Stop tracking when clicking manual mark
+            } else {
+                // Set mark B at current position - use preset color
+                AXISState.addManualMark({
+                    name: 'B',
+                    label: 'Mark B',
+                    distance: focus.distance
+                });
+                // Update button state
+                updateMarkButtons();
+            }
+        }
+
+        // Set/Get Mark C
+        function simSetMarkC() {
+            const marks = AXISState.get('manualMarks');
+            const focus = AXISState.get('focus');
+            const existingC = marks.find(m => m.name === 'C');
+
+            if (existingC) {
+                // Jump to mark C
+                AXISState.setFocusDistance(existingC.distance);
+                simStopAITracking();
+            } else {
+                // Set mark C at current position - use preset color
+                AXISState.addManualMark({
+                    name: 'C',
+                    label: 'Mark C',
+                    distance: focus.distance
+                });
+                updateMarkButtons();
+            }
+        }
+
+        // Set/Get Mark D
+        function simSetMarkD() {
+            const marks = AXISState.get('manualMarks');
+            const focus = AXISState.get('focus');
+            const existingD = marks.find(m => m.name === 'D');
+
+            if (existingD) {
+                // Jump to mark D
+                AXISState.setFocusDistance(existingD.distance);
+                simStopAITracking();
+            } else {
+                // Set mark D at current position - use preset color
+                AXISState.addManualMark({
+                    name: 'D',
+                    label: 'Mark D',
+                    distance: focus.distance
+                });
+                updateMarkButtons();
+            }
+        }
+
+        // Delete nearest mark to current focus position
+        function simDeleteNearestMark() {
+            const marks = AXISState.get('manualMarks');
+            const focus = AXISState.get('focus');
+
+            if (marks.length === 0) return;
+
+            // Find marks within a small window of current focus (±0.3m or ±10%)
+            const threshold = Math.max(0.3, focus.distance * 0.1);
+            const nearbyMarks = marks.filter(m =>
+                Math.abs(m.distance - focus.distance) <= threshold
+            );
+
+            if (nearbyMarks.length === 0) return;
+
+            // Delete the most recently added (highest id)
+            const mostRecent = nearbyMarks.reduce((a, b) => a.id > b.id ? a : b);
+            AXISState.deleteManualMark(mostRecent.id);
+            updateMarkButtons();
+        }
+
+        // Update A/B/C/D button visual state based on mark colors
+        function updateMarkButtons() {
+            const marks = AXISState.get('manualMarks');
+            const buttons = ['A', 'B', 'C', 'D'];
+
+            buttons.forEach(name => {
+                const btn = document.getElementById(`sim-mark-${name.toLowerCase()}-btn`);
+                if (!btn) return;
+
+                const mark = marks.find(m => m.name === name);
+                if (mark) {
+                    btn.classList.add('active');
+                    btn.style.background = mark.color;
+                    btn.style.color = '#000';
+                    btn.style.borderColor = mark.color;
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }
+            });
+        }
+
+        // Alias for backward compatibility
+        function updateMarkABButtons() {
+            updateMarkButtons();
+        }
+
+        // ==================== A-B LIMIT MODE ====================
+        // When enabled, restricts focus range to A-B marks and remaps knob
+
+        function simToggleABLimit() {
+            const focus = AXISState.get('focus');
+            const marks = AXISState.get('manualMarks');
+            const markA = marks.find(m => m.name === 'A');
+            const markB = marks.find(m => m.name === 'B');
+
+            // Toggle the mode
+            const newEnabled = !focus.abLimitEnabled;
+
+            // Can only enable if both A and B marks exist
+            if (newEnabled && (!markA || !markB)) {
+                console.warn('A-B Limit requires both A and B marks to be set');
+                return;
+            }
+
+            AXISState.set('focus.abLimitEnabled', newEnabled);
+            updateABLimitButton();
+
+            // If enabling, clamp current position to A-B range
+            if (newEnabled) {
+                const minDist = Math.min(markA.distance, markB.distance);
+                const maxDist = Math.max(markA.distance, markB.distance);
+                const currentDist = focus.distance;
+                const clampedDist = Math.max(minDist, Math.min(maxDist, currentDist));
+                if (clampedDist !== currentDist) {
+                    AXISState.setFocusDistance(clampedDist);
+                }
+            }
+        }
+
+        function updateABLimitButton() {
+            const btn = document.getElementById('sim-ab-limit-btn');
+            if (!btn) return;
+
+            const focus = AXISState.get('focus');
+            const enabled = focus.abLimitEnabled;
+
+            if (enabled) {
+                btn.classList.add('active');
+                btn.style.background = '#ff6b35';
+                btn.style.color = '#000';
+                btn.style.borderColor = '#00d4ff';
+            } else {
+                btn.classList.remove('active');
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.borderColor = '';
+            }
+        }
+
+        // Get A-B limit range (returns null if not enabled or marks missing)
+        function getABLimitRange() {
+            const focus = AXISState.get('focus');
+            if (!focus.abLimitEnabled) return null;
+
+            const marks = AXISState.get('manualMarks');
+            const markA = marks.find(m => m.name === 'A');
+            const markB = marks.find(m => m.name === 'B');
+
+            if (!markA || !markB) {
+                // Marks were deleted, disable limit mode
+                AXISState.set('focus.abLimitEnabled', false);
+                updateABLimitButton();
+                return null;
+            }
+
+            return {
+                min: Math.min(markA.distance, markB.distance),
+                max: Math.max(markA.distance, markB.distance)
+            };
+        }
+
+        // Focus knob down - pause AI tracking while user is controlling
+        let focusKnobActive = false;
+        let aiWasTracking = false;
+
+        function simFocusKnobDown() {
+            focusKnobActive = true;
+            // Remember if AI was tracking, then pause it
+            const ai = AXISState.get('ai');
+            aiWasTracking = ai.enabled && (ai.subjects || []).some(s => s.tracking);
+            // Signal user override to hand controller
+            if (typeof HandController !== 'undefined' && HandController.onUserFocusInput) {
+                HandController.onUserFocusInput();
+            }
+        }
+
+        function simFocusKnobUp() {
+            focusKnobActive = false;
+            // Optionally resume AI tracking after a delay (configurable behavior)
+            // For now, tracking resumes via the timeout in hand-controller
+        }
+
+        // Stop AI tracking completely (when clicking manual mark)
+        function simStopAITracking() {
+            const ai = AXISState.get('ai');
+            const subjects = [...(ai.subjects || [])];
+            // Clear all tracking flags
+            subjects.forEach(s => s.tracking = false);
+            AXISState.set('ai.subjects', subjects);
+        }
+
+        // ==================== CH2 MARKS ====================
+
+        // Get current CH2 value based on assignment
+        function getCh2CurrentValue() {
+            const channels = AXISState.get('channels');
+            const ch2 = channels[1];
+            const motors = AXISState.get('motors');
+            const slider = document.getElementById('sim-zoom');
+            const pos = parseFloat(slider.value) / 100;
+
+            if (ch2.type === 'motor') {
+                const motor = motors[ch2.motorIndex];
+                return motor ? motor.value : pos * 100;
+            }
+            return pos * 100;
+        }
+
+        // Set CH2 Mark X (formerly A)
+        function simSetCh2MarkX() {
+            const marks = AXISState.get('ch2Marks');
+            const existingX = marks.find(m => m.name === 'X');
+            const currentValue = getCh2CurrentValue();
+            const slider = document.getElementById('sim-zoom');
+            const pos = parseFloat(slider.value) / 100;
+
+            if (existingX) {
+                // Jump to mark X
+                document.getElementById('sim-zoom').value = existingX.position * 100;
+                simUpdateCh2(existingX.position * 100);
+            } else {
+                // Set mark X at current position
+                const newMarks = [...marks, {
+                    id: Date.now(),
+                    name: 'X',
+                    value: currentValue,
+                    position: pos,
+                    color: '#ff8800'
+                }];
+                AXISState.set('ch2Marks', newMarks);
+                updateCh2MarkButtons();
+            }
+        }
+
+        // Set CH2 Mark Y (middle mark)
+        function simSetCh2MarkY() {
+            const marks = AXISState.get('ch2Marks');
+            const existingY = marks.find(m => m.name === 'Y');
+            const currentValue = getCh2CurrentValue();
+            const slider = document.getElementById('sim-zoom');
+            const pos = parseFloat(slider.value) / 100;
+
+            if (existingY) {
+                // Jump to mark Y
+                document.getElementById('sim-zoom').value = existingY.position * 100;
+                simUpdateCh2(existingY.position * 100);
+            } else {
+                // Set mark Y at current position
+                const newMarks = [...marks, {
+                    id: Date.now(),
+                    name: 'Y',
+                    value: currentValue,
+                    position: pos,
+                    color: '#ffcc44'
+                }];
+                AXISState.set('ch2Marks', newMarks);
+                updateCh2MarkButtons();
+            }
+        }
+
+        // Set CH2 Mark Z (formerly B)
+        function simSetCh2MarkZ() {
+            const marks = AXISState.get('ch2Marks');
+            const existingZ = marks.find(m => m.name === 'Z');
+            const currentValue = getCh2CurrentValue();
+            const slider = document.getElementById('sim-zoom');
+            const pos = parseFloat(slider.value) / 100;
+
+            if (existingZ) {
+                // Jump to mark Z
+                document.getElementById('sim-zoom').value = existingZ.position * 100;
+                simUpdateCh2(existingZ.position * 100);
+            } else {
+                // Set mark Z at current position
+                const newMarks = [...marks, {
+                    id: Date.now(),
+                    name: 'Z',
+                    value: currentValue,
+                    position: pos,
+                    color: '#ffaa44'
+                }];
+                AXISState.set('ch2Marks', newMarks);
+                updateCh2MarkButtons();
+            }
+        }
+
+        // Delete nearest CH2 mark to current position
+        function simDeleteNearestCh2Mark() {
+            const marks = AXISState.get('ch2Marks');
+            const slider = document.getElementById('sim-zoom');
+            const currentPos = parseFloat(slider.value) / 100;
+
+            if (marks.length === 0) return;
+
+            // Find marks within threshold of current position (±10%)
+            const threshold = 0.1;
+            const nearbyMarks = marks.filter(m =>
+                Math.abs(m.position - currentPos) <= threshold
+            );
+
+            if (nearbyMarks.length === 0) return;
+
+            // Delete the most recently added (highest id)
+            const mostRecent = nearbyMarks.reduce((a, b) => a.id > b.id ? a : b);
+            const newMarks = marks.filter(m => m.id !== mostRecent.id);
+            AXISState.set('ch2Marks', newMarks);
+            updateCh2MarkButtons();
+        }
+
+        // Update CH2 X/Y/Z button visual state
+        function updateCh2MarkButtons() {
+            const marks = AXISState.get('ch2Marks');
+            const btnX = document.getElementById('sim-ch2-mark-x-btn');
+            const btnY = document.getElementById('sim-ch2-mark-y-btn');
+            const btnZ = document.getElementById('sim-ch2-mark-z-btn');
+
+            const hasX = marks.some(m => m.name === 'X');
+            const hasY = marks.some(m => m.name === 'Y');
+            const hasZ = marks.some(m => m.name === 'Z');
+
+            if (btnX) {
+                btnX.classList.toggle('active', hasX);
+                btnX.style.background = hasX ? '#ff8800' : '';
+                btnX.style.color = hasX ? '#000' : '';
+            }
+            if (btnY) {
+                btnY.classList.toggle('active', hasY);
+                btnY.style.background = hasY ? '#ffcc44' : '';
+                btnY.style.color = hasY ? '#000' : '';
+            }
+            if (btnZ) {
+                btnZ.classList.toggle('active', hasZ);
+                btnZ.style.background = hasZ ? '#ffaa44' : '';
+                btnZ.style.color = hasZ ? '#000' : '';
+            }
+        }
+
+        // ==================== CH2 X-Z LIMIT MODE ====================
+
+        function simToggleCh2XZLimit() {
+            const ch2 = AXISState.get('ch2');
+            const marks = AXISState.get('ch2Marks');
+            const markX = marks.find(m => m.name === 'X');
+            const markZ = marks.find(m => m.name === 'Z');
+
+            const newEnabled = !ch2.xzLimitEnabled;
+
+            // Can only enable if both X and Z marks exist
+            if (newEnabled && (!markX || !markZ)) {
+                console.warn('CH2 X-Z Limit requires both X and Z marks to be set');
+                return;
+            }
+
+            AXISState.set('ch2.xzLimitEnabled', newEnabled);
+            updateCh2XZLimitButton();
+        }
+
+        function updateCh2XZLimitButton() {
+            const btn = document.getElementById('sim-ch2-xz-limit-btn');
+            if (!btn) return;
+
+            const ch2 = AXISState.get('ch2');
+            const enabled = ch2.xzLimitEnabled;
+
+            if (enabled) {
+                btn.classList.add('active');
+                btn.style.background = '#ff8800';
+                btn.style.color = '#000';
+                btn.style.borderColor = '#ffaa44';
+            } else {
+                btn.classList.remove('active');
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.borderColor = '';
+            }
+        }
+
+        // Get CH2 X-Z limit range (returns null if not enabled or marks missing)
+        function getCh2XZLimitRange() {
+            const ch2 = AXISState.get('ch2');
+            if (!ch2.xzLimitEnabled) return null;
+
+            const marks = AXISState.get('ch2Marks');
+            const markX = marks.find(m => m.name === 'X');
+            const markZ = marks.find(m => m.name === 'Z');
+
+            if (!markX || !markZ) {
+                // Marks were deleted, disable limit mode
+                AXISState.set('ch2.xzLimitEnabled', false);
+                updateCh2XZLimitButton();
+                return null;
+            }
+
+            return {
+                min: Math.min(markX.position, markZ.position),
+                max: Math.max(markX.position, markZ.position)
+            };
+        }
+
+        // Initialize all components when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render all components
+            HandController.render('hand-controller-container');
+            FocusWheel.render('focus-wheel-container');
+            // SDI Overlay disabled in simulator
+            MotorDisplay.render('motor-display-container');
+            MotorBridge.render('motor-bridge-container');
+
+            // Expose AXISState globally
+            window.AXISState = AXISState;
+
+            // Initialize simulator UI from state (lens-aware)
+            const focus = AXISState.get('focus');
+            const lens = AXISState.get('lens');
+            const focusPos = distanceToPosition(focus.distance, lens) * 100;
+            document.getElementById('sim-focus').value = focusPos;
+            document.getElementById('sim-focus-val').textContent = formatDistance(focus.distance);
+
+            // Initialize all channel slider UIs
+            updateChannelSliderUIs();
+
+            // Initialize AI subjects panel
+            simRenderSubjects();
+
+            // Subscribe to AI state changes so simulator reflects tracking from hand unit
+            AXISState.subscribe('ai', simRenderSubjects);
+
+            // Subscribe to manual marks to update A/B button states and check A-B limit
+            AXISState.subscribe('manualMarks', () => {
+                updateMarkABButtons();
+                // Check if A-B limit should be disabled (marks deleted)
+                getABLimitRange();
+            });
+            updateMarkABButtons(); // Initial state
+            updateABLimitButton(); // Initial A-B limit button state
+
+            // Subscribe to CH2 marks to update X/Y/Z button states and check CH2 X-Z limit
+            AXISState.subscribe('ch2Marks', () => {
+                updateCh2MarkButtons();
+                // Check if CH2 X-Z limit should be disabled (marks deleted)
+                getCh2XZLimitRange();
+            });
+            updateCh2MarkButtons(); // Initial state
+            updateCh2XZLimitButton(); // Initial CH2 X-Z limit button state
+
+            // Update battery/link sliders to match defaults
+            document.getElementById('sim-battery').value = AXISState.get('battery.level');
+            document.getElementById('sim-battery-val').textContent = AXISState.get('battery.level') + '%';
+            document.getElementById('sim-link').value = AXISState.get('system.linkQuality');
+            document.getElementById('sim-link-val').textContent = AXISState.get('system.linkQuality') + '%';
+
+            console.log('AXIS Focus UI initialized');
+            console.log('Click "Simulator" button to control the UI');
+        });
+    </script>
+</body>
+</html>

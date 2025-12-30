@@ -1,0 +1,270 @@
+/**
+ * AXIS Focus - Motor Bridge Styles
+ * Compact 2-3 inch display (240x320)
+ */
+
+/* Main Container - sized for small display */
+.motor-bridge {
+    width: 240px;
+    background: linear-gradient(180deg, #0a0c0f 0%, #050608 100%);
+    border-radius: 8px;
+    border: 1px solid #1a1a22;
+    padding: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* Header - minimal */
+.bridge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a1a22;
+}
+
+.bridge-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #666;
+}
+
+.bridge-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+}
+
+.bridge-status.ok .bridge-status-dot {
+    background: #00ff88;
+    box-shadow: 0 0 4px #00ff88;
+}
+
+.bridge-status.warning {
+    background: rgba(255, 204, 0, 0.1);
+    border-color: rgba(255, 204, 0, 0.2);
+}
+
+.bridge-status.warning .bridge-status-dot {
+    background: #ffcc00;
+    box-shadow: 0 0 4px #ffcc00;
+}
+
+.bridge-status.error {
+    background: rgba(255, 68, 68, 0.1);
+    border-color: rgba(255, 68, 68, 0.2);
+}
+
+.bridge-status.error .bridge-status-dot {
+    background: #ff4444;
+    box-shadow: 0 0 4px #ff4444;
+}
+
+.bridge-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00ff88;
+    animation: status-pulse 2s ease-in-out infinite;
+}
+
+.bridge-status-text {
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.bridge-status.ok .bridge-status-text { color: #00ff88; }
+.bridge-status.warning .bridge-status-text { color: #ffcc00; }
+.bridge-status.error .bridge-status-text { color: #ff4444; }
+
+@keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Inputs Row - Video, Power, LiDAR in a single compact row */
+.bridge-inputs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.bridge-input {
+    flex: 1;
+    background: #0a0c0f;
+    border: 1px solid #1a1a22;
+    border-radius: 4px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.bridge-input-icon {
+    font-size: 10px;
+    margin-bottom: 2px;
+}
+
+.bridge-input-label {
+    font-size: 6px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.bridge-input-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+.bridge-input-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.bridge-input-dot.connected {
+    background: #00ff88;
+    box-shadow: 0 0 4px rgba(0, 255, 136, 0.6);
+}
+
+.bridge-input-dot.disconnected {
+    background: #444;
+}
+
+.bridge-input-value {
+    font-size: 8px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.bridge-input-detail {
+    font-size: 7px;
+    color: #00d4ff;
+    margin-top: 2px;
+}
+
+/* Motor Channels Section */
+.bridge-motors {
+    background: #0a0c0f;
+    border: 1px solid #1a1a22;
+    border-radius: 4px;
+    padding: 6px;
+}
+
+.bridge-motors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1a1a22;
+}
+
+.bridge-motors-title {
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #555;
+}
+
+.bridge-motors-power {
+    font-size: 8px;
+    font-weight: 700;
+    color: #ffcc00;
+    padding: 1px 4px;
+    background: rgba(255, 204, 0, 0.1);
+    border-radius: 3px;
+}
+
+/* Motor Channel Grid - 2x2 */
+.bridge-motor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+}
+
+/* Individual Motor Channel - compact */
+.bridge-motor-channel {
+    background: #12141a;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    padding: 6px;
+}
+
+.bridge-motor-channel.disconnected {
+    opacity: 0.35;
+}
+
+.bridge-motor-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.bridge-motor-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.bridge-motor-dot.connected {
+    box-shadow: 0 0 4px currentColor;
+}
+
+.bridge-motor-dot.disconnected {
+    background: #333;
+    box-shadow: none;
+}
+
+.bridge-motor-label {
+    font-size: 7px;
+    font-weight: 700;
+    color: #555;
+}
+
+.bridge-motor-assignment {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+/* Motor Position Bar */
+.bridge-motor-bar-container {
+    height: 3px;
+    background: #1a1a22;
+    border-radius: 2px;
+    margin-bottom: 3px;
+    overflow: hidden;
+}
+
+.bridge-motor-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.15s ease-out;
+}
+
+.bridge-motor-power {
+    font-size: 7px;
+    font-weight: 600;
+    color: #666;
+    text-align: right;
+}
+
+/* Channel colors */
+.bridge-motor-channel[data-channel="1"] .bridge-motor-dot.connected { background: #00d4ff; }
+.bridge-motor-channel[data-channel="2"] .bridge-motor-dot.connected { background: #00ff88; }
+.bridge-motor-channel[data-channel="3"] .bridge-motor-dot.connected { background: #ff6b35; }
+.bridge-motor-channel[data-channel="4"] .bridge-motor-dot.connected { background: #b266ff; }

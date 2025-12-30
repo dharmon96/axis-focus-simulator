@@ -414,6 +414,7 @@
     <script src="js/core/constants.js"></script>
     <script src="js/axis-state.js"></script>
     <script src="js/axis-scale.js"></script>
+    <script src="js/boot-sequence.js"></script>
 
     <!-- Load Utility Modules -->
     <script src="js/utils/dof-calculator.js"></script>
@@ -425,6 +426,7 @@
 
     <!-- Load Communication -->
     <script src="js/axis-websocket.js"></script>
+    <script src="js/physical-input-handler.js"></script>
 
     <!-- Load UI Components -->
     <script src="js/hand-controller.js"></script>
@@ -1592,6 +1594,11 @@
 
             console.log('AXIS Focus UI initialized');
             console.log('Click "Simulator" button to control the UI');
+
+            // Complete boot sequence - triggers entrance animations
+            if (typeof AXISBoot !== 'undefined') {
+                AXISBoot.complete();
+            }
         });
     </script>
 </body>
